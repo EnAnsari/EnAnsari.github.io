@@ -16,3 +16,9 @@ npm run watch
 ```bash
 npm start
 ```
+
+Output screenshot:
+
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/f692fd44-1248-4d55-a8a5-db2adf445e0c" alt="screenshot" height="480" width="auto" style="max-height: 480px; width: auto;">
+</div>
