@@ -11,11 +11,12 @@
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true, // ADDED: This will ignore the errors in d3's type files
+    "esModuleInterop": true,
 
     "target": "ES5",
     "module": "ESNext",
     "moduleResolution": "Node",
-    "esModuleInterop": true,
     "outDir": "dist"
   },
 
