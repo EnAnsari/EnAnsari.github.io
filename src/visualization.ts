@@ -20,56 +20,65 @@ export interface Link extends d3.SimulationLinkDatum<Node> {
 export class GraphVisualizer {
     private readonly nodes: Node[] = [];
     private readonly links: Link[] = [];
-    private readonly config: { linkDistanceUnit: number, chargeStrength: number, circleRadiusUnit: number };
-    private readonly simulation: d3.Simulation<Node, Link>;
+    // CHANGED: Config is now mutable and will be updated on resize
+    private config: { linkDistanceUnit: number, chargeStrength: number, circleRadiusUnit: number };
+    private readonly simulation;
     private hideTask: () => void;
-
-    // ADDED: A main group <g> to hold all visual elements (nodes, links)
-    // This group will be transformed by the zoom behavior
-    private readonly mainGroup: d3.Selection<SVGGElement, unknown, null, undefined>;
-    
-    // UPDATED: The container is the root <svg> element
-    private readonly svgElement: SVGSVGElement;
-
+    // ADDED: A single tooltip for the whole application
+    private readonly tip: Tooltip;
+    // ADDED: A container for all nodes/links, used for zooming
+    private readonly container: SVGGElement;
 
     public constructor(
-        // UPDATED: Changed type from SVGGElement to SVGSVGElement
-        private readonly container: SVGSVGElement,
+        // CHANGED: Accept the main SVG element
+        private readonly svg: SVGSVGElement,
     ) {
-        this.svgElement = container;
-        const sizeFactor = Math.min(this.svgElement.clientWidth, this.svgElement.clientHeight) / 1000;
-        this.config = {
-            linkDistanceUnit: 300 * sizeFactor,
-            circleRadiusUnit: 80 * sizeFactor,
-            chargeStrength: -60 * sizeFactor
-        };
+        // ADDED: Create the 'g' element that will hold the visualization and respond to zoom
+        this.container = d3.select(this.svg).append('g').node() as SVGGElement;
 
-        // ADDED: Create the main group <g>
-        this.mainGroup = d3.select(this.svgElement).append('g');
+        // ADDED: Create the single tooltip instance
+        this.tip = new Tooltip();
+        document.body.appendChild(this.tip.getNode());
 
-        // ADDED: Set up zoom and pan (which works for touch and mouse)
-        const zoom = d3.zoom()
-            .scaleExtent([0.1, 4]) // Min/max zoom levels
-            .on('zoom', (event) => {
-                // Apply the zoom transform to the main group
-                this.mainGroup.attr('transform', event.transform);
-            });
-        
-        // Apply the zoom behavior to the main SVG element
-        d3.select(this.svgElement)
-          .call(zoom as any)
-          .on("dblclick.zoom", null); // Disable double-click to zoom
-
+        // This will be populated by updateConfig
+        this.config = { linkDistanceUnit: 0, chargeStrength: 0, circleRadiusUnit: 0 };
+        this.updateConfig(); // Set initial config
 
         this.simulation = d3.forceSimulation<Node, Link>(this.nodes)
             .on('tick', () => this.ticked());
         this.applyAllForces();
 
         this.simulation.velocityDecay(0.05);
-        this.hideTask = () => {
-        };
+        this.hideTask = () => {};
+
+        // ADDED: Zoom and Pan functionality
+        const zoom = d3.zoom<SVGSVGElement, unknown>()
+            .scaleExtent([0.1, 4]) // Min 0.1x zoom, max 4x zoom
+            .on('zoom', (event) => {
+                d3.select(this.container).attr('transform', event.transform.toString());
+                // Hide tooltip on zoom/pan to prevent it from getting stuck
+                this.tip.hide();
+            });
+
+        d3.select(this.svg)
+            .call(zoom)
+            // ADDED: Background click to hide tooltip
+            .on('click', () => {
+                this.tip.hide();
+            });
 
         this.registerResize();
+    }
+
+    // ADDED: A function to calculate and set sizing config
+    // This will be called on init and on resize
+    private updateConfig() {
+        const sizeFactor = Math.min(this.svg.clientWidth, this.svg.clientHeight) / 1000;
+        this.config = {
+            linkDistanceUnit: 300 * sizeFactor,
+            circleRadiusUnit: 80 * sizeFactor,
+            chargeStrength: -60 * sizeFactor
+        };
     }
 
     public addNode(node: Node) {
@@ -83,8 +92,7 @@ export class GraphVisualizer {
     }
 
     private update() {
-        // UPDATED: All selections now happen within this.mainGroup
-        this.mainGroup
+        d3.select(this.container) // CHANGED: Select from the 'g' container
             .selectAll<SVGGElement, Node>('.node')
             .data(this.nodes, d => d.id)
             .join(
@@ -108,10 +116,8 @@ export class GraphVisualizer {
                         .attr('r', d => d.relSize * this.config.circleRadiusUnit)
                         .attr('fill', d => `url(#${'pattern' + d.id})`);
                     
-                    // UPDATED: Select 'defs' from the root container (SVG)
-                    // Definitions should be at the top level, not inside the zoomable group
                     nodeEnter.each(d =>
-                        d3.select(this.svgElement)
+                        d3.select(this.svg) // CHANGED: Add defs to main svg
                             .append('defs')
                             .append('pattern')
                             .attr('id', 'pattern' + d.id)
@@ -124,31 +130,42 @@ export class GraphVisualizer {
                             .attr("xlink:href", d.image)
                             .attr('width', d.relSize * this.config.circleRadiusUnit * 2)
                             .attr('height', d.relSize * this.config.circleRadiusUnit * 2)
-                    )
+                    );
 
-                    let tip = new Tooltip();
-                    document.body.appendChild(tip.getNode());
+                    // REMOVED: Per-node tooltip creation
 
-                    let that = this;
-                    let showTimeout: NodeJS.Timeout;
-
-                    tip.getNode().onmouseover = (() => {
-                        clearTimeout(showTimeout)
+                    // CHANGED: Use the single, class-wide tooltip
+                    // FIXED: Changed NodeJS.Timeout to ReturnType<typeof setTimeout> for browser compatibility
+                    let showTimeout: ReturnType<typeof setTimeout>;
+                    
+                    this.tip.getNode().onmouseover = (() => {
+                        clearTimeout(showTimeout);
                     });
-                    tip.getNode().onmouseout = ( () => {
-                        showTimeout = setTimeout(this.hideTask, 800)
+                    this.tip.getNode().onmouseout = (() => {
+                        showTimeout = setTimeout(this.hideTask, 800);
                     });
 
                     nodeEnter.filter((d: Node) => {
                         return d.description !== undefined && d.description.length > 0;
-                    }).on('mouseover', function (...args) {
-                        clearTimeout(showTimeout)
-                        tip.setData(...args, that.config.circleRadiusUnit);
-                        that.hideTask();
-                        tip.show();
-                    }).on('mouseout', function (...args) {
-                        that.hideTask = () => tip.hide();
-                        showTimeout = setTimeout(that.hideTask, 800)
+                    })
+                    // --- Desktop Hover ---
+                    .on('mouseover', (event, d) => {
+                        clearTimeout(showTimeout);
+                        this.tip.setData(event, d, this.config.circleRadiusUnit);
+                        this.hideTask(); // Hide any other visible tip
+                        this.tip.show();
+                    }).on('mouseout', (event, d) => {
+                        this.hideTask = () => this.tip.hide();
+                        showTimeout = setTimeout(this.hideTask, 800);
+                    })
+                    // --- ADDED: Mobile Tap/Click ---
+                    .on('click', (event, d) => {
+                        // Stop the click from bubbling up to the SVG (which would hide the tip)
+                        event.stopPropagation(); 
+                        clearTimeout(showTimeout);
+                        this.tip.setData(event, d, this.config.circleRadiusUnit);
+                        this.hideTask(); // Hide any other visible tip
+                        this.tip.show();
                     });
 
                     return nodeEnter;
@@ -156,8 +173,7 @@ export class GraphVisualizer {
                 undefined,
                 exit => exit.remove());
 
-        // UPDATED: All selections now happen within this.mainGroup
-        this.mainGroup
+        d3.select(this.container) // CHANGED: Select from the 'g' container
             .selectAll<SVGLineElement, Link>('.link')
             .data(this.links, (d) => `${d.source.id}-${d.target.id}`)
             .join(
@@ -174,8 +190,7 @@ export class GraphVisualizer {
         this.simulation.alpha(0.3).restart();
 
         // re-order line and nodes
-        // UPDATED: All selections now happen within this.mainGroup
-        this.mainGroup.selectAll<SVGLineElement, Link>('.link')
+        d3.select(this.container).selectAll<SVGLineElement, Link>('.link') // CHANGED: Select from the 'g' container
             .each(function (link) {
                 const linkElement = this;
                 linkElement.parentNode?.insertBefore(linkElement, linkElement.parentNode.firstChild);
@@ -183,18 +198,15 @@ export class GraphVisualizer {
     }
 
     private selectLinks() {
-        // UPDATED: All selections now happen within this.mainGroup
-        return this.mainGroup.selectAll<SVGLineElement, Link>('.link').data(this.links);
+        return d3.select(this.container).selectAll<SVGLineElement, Link>('.link').data(this.links); // CHANGED: Select from the 'g' container
     }
 
     private selectNodes() {
-        // UPDATED: All selections now happen within this.mainGroup
-        return this.mainGroup.selectAll<SVGGElement, Node>('.node').data(this.nodes);
+        return d3.select(this.container).selectAll<SVGGElement, Node>('.node').data(this.nodes); // CHANGED: Select from the 'g' container
     }
 
     private dragstarted(event: any, d: Node) {
         if (!event.active) this.simulation.alphaTarget(0.3).restart();
-        // Use event.x and event.y directly, as they are in the coordinate system of the mainGroup
         d.fx = event.x;
         d.fy = event.y;
     }
@@ -217,13 +229,14 @@ export class GraphVisualizer {
             .attr('x2', (d) => d.target?.x ?? assert.fail())
             .attr('y2', (d) => d.target?.y ?? assert.fail());
         this.selectNodes()
+            // CHANGED: Use transform for node position
             .attr('transform', (d) => `translate(${d.x}, ${d.y})`);
     }
 
     private registerResize() {
-        let lastResizeTimeout: NodeJS.Timeout | undefined;
+        // FIXED: Changed NodeJS.Timeout to ReturnType<typeof setTimeout>
+        let lastResizeTimeout: ReturnType<typeof setTimeout> | undefined;
 
-        // This correctly observes the main SVG element
         const resizeObserver = new ResizeObserver(entries => {
             for (const entry of entries) {
                 if (lastResizeTimeout !== undefined) {
@@ -231,24 +244,43 @@ export class GraphVisualizer {
                 }
                 // Set a new timeout to execute the resize logic after 1 second of inactivity
                 lastResizeTimeout = setTimeout(() => {
-                    // Update scale factor based on new size
-                    const sizeFactor = Math.min(this.svgElement.clientWidth, this.svgElement.clientHeight) / 1000;
-                    this.config.linkDistanceUnit = 300 * sizeFactor;
-                    this.config.circleRadiusUnit = 80 * sizeFactor;
-                    this.config.chargeStrength = -60 * sizeFactor;
+                    // --- ADDED: Responsive Logic ---
+                    // 1. Recalculate size config
+                    this.updateConfig();
+                    
+                    // 2. Update forces that depend on config
+                    this.applyAllForces(); // Re-applies all forces with new config
+                    this.simulation.force('link', d3.forceLink<Node, Link>(this.links).strength(0.07)
+                        .distance((link) => link.target.relDistance * this.config.linkDistanceUnit));
+                    
+                    // 3. Update existing node elements with new radius
+                    this.selectNodes().selectAll('circle')
+                         .attr('r', (d: any) => d.relSize * this.config.circleRadiusUnit);
+                    
+                    // 4. Update image patterns
+                    this.selectNodes().each((d: any) => {
+                         d3.select(this.svg).select('#pattern' + d.id)
+                            .attr('x', -d.relSize * this.config.circleRadiusUnit)
+                            .attr('y', -d.relSize * this.config.circleRadiusUnit)
+                            .attr('width', d.relSize * this.config.circleRadiusUnit * 2)
+                            .attr('height', d.relSize * this.config.circleRadiusUnit * 2)
+                            .select("image")
+                            .attr('width', d.relSize * this.config.circleRadiusUnit * 2)
+                            .attr('height', d.relSize * this.config.circleRadiusUnit * 2);
+                    });
+                    // --- End of Responsive Logic ---
 
-                    this.applyAllForces();
                     this.simulation.alpha(1).restart();
                     lastResizeTimeout = undefined;
-                }, 500); // Reduced delay to 500ms
+                }, 500);
             }
         });
-        resizeObserver.observe(this.svgElement);
+        resizeObserver.observe(this.svg); // CHANGED: Observe the main SVG element
     }
 
     private applyCenterForce() {
-        // This correctly centers the simulation in the middle of the SVG element
-        this.simulation.force('center', d3.forceCenter(this.svgElement.clientWidth / 2, this.svgElement.clientHeight / 2)
+        // CHANGED: Use svg clientWidth/Height
+        this.simulation.force('center', d3.forceCenter(this.svg.clientWidth / 2, this.svg.clientHeight / 2)
             .strength(0.1));
     }
 
@@ -257,30 +289,27 @@ export class GraphVisualizer {
             return (alpha: number) => {
                 for (const node of this.simulation.nodes()) {
                     const {x, y, vx, vy} = node;
-                    const radius = node.relSize * this.config.circleRadiusUnit;
-                    // Updated limits to use radius
-                    const xminlim = radius;
-                    const xmaxlim = params.width - radius;
-                    const yminlim = radius;
-                    const ymaxlim = params.height - radius;
-
+                    const xminlim = 0.1 * params.width;
+                    const xmaxlim = 0.9 * params.width;
+                    const yminlim = 0.1 * params.height;
+                    const ymaxlim = 0.9 * params.height;
                     if (x !== undefined && vx !== undefined && x <= xminlim) {
                         node.vx = vx + (xminlim - x) * params.strength * alpha;
-                    } else if (x !== undefined && vx !== undefined && x >= xmaxlim) {
+                    } else if (x !== undefined && vx !== undefined && x >= 0.9 * params.width) {
                         node.vx = vx + (xmaxlim - x) * params.strength * alpha;
                     }
 
-                    if (y !== undefined && vy !== undefined && y <= yminlim) {
+                    if (y !== undefined && vy !== undefined && y <= 0.1 * params.height) {
                         node.vy = vy + (yminlim - y) * params.strength * alpha;
-                    } else if (y !== undefined && vy !== undefined && y >= ymaxlim) {
+                    } else if (y !== undefined && vy !== undefined && y >= 0.9 * params.height) {
                         node.vy = vy + (ymaxlim - y) * params.strength * alpha;
                     }
                 }
             };
         };
-        // This correctly sets the boundaries to the SVG element's size
         this.simulation.force('boundary', boundaryForce(
-            {width: this.svgElement.clientWidth, height: this.svgElement.clientHeight, strength: 0.3}));
+            // CHANGED: Use svg clientWidth/Height
+            {width: this.svg.clientWidth, height: this.svg.clientHeight, strength: 0.3}));
     }
 
     private applyChargeForce() {
@@ -289,7 +318,7 @@ export class GraphVisualizer {
 
     private applyCollideForce() {
         this.simulation.force("collide", d3.forceCollide<Node>()
-            .radius(d => d.relSize * this.config.circleRadiusUnit + 10)); // Added a small buffer
+            .radius(d => d.relSize * this.config.circleRadiusUnit));
     }
 
     private applyAllForces() {

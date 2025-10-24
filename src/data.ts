@@ -56,10 +56,30 @@ export function getTree() {
 }
 
 
-// const cvNode = addItem({
-//     description: "You can download a more formal resume <a href=\"/static/cv.pdf\">here</a>",
-//     picture: "/static/images/cv.jpg",
-// }, rootItem);
+const cvNode = addItem({
+    description: "You can download a more formal resume <a href=\"https://rahmat-ml.github.io/files/rahmat-ansari-cv.pdf\">here</a>",
+    picture: "/static/images/cv.png",
+}, rootItem);
+
+const hsuNode = addItem({
+    description: "Grade: 17.65/20 (1st rank - 2020 entrance of computer engineering)",
+    picture: "/static/images/hsu.jpg",
+}, rootItem);
+
+const iustNode = addItem({
+    description: "Master's degree student in AI",
+    picture: "/static/images/iust.png",
+}, rootItem);
+
+const hsuLugNode = addItem({
+    description: "I was one of the three leaders for the year 2023-2024, and with the help of other leaders and enthusiastic students, we held warm and intimate meetings about the latest technology and practical and experimental training in the professional workplace. This group was the most active Linux user group (LUG) in Sabzevar.",
+    picture: "/static/images/lug.jpg",
+}, hsuNode);
+
+const hsuSscNode = addItem({
+    description: "As a member of the Computer Engineering Scientific Association of Hakim Sabzevari University, I participated in many activities. I was the designer of the programming competition and somehow I had a role in correcting it. I also collaborated with other members in many festivals. The cooperating professor of this course was Professor Fasihfar, a member of the computer engineering faculty of Hakim Sabzevari University.",
+    picture: "/static/images/ssc-hsu.jpg",
+}, hsuNode);
 
 // const highSchoolNode = addItem({
 //     description: "Studied in Shahid Dastgheib 1 HighSchool 2017-2020 (Shiraz, Iran)<br/>\

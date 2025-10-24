@@ -1,5 +1,5 @@
 import {GraphVisualizer} from "./visualization";
-import {select, text, window} from "d3";
+import {select, text} from "d3";
 import * as assert from "assert";
 import {getTree, Tree} from "./data";
 import {Node} from "./visualization";
