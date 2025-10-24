@@ -6,7 +6,8 @@
   "scripts": {
     "build": "npx webpack --config webpack.config.js",
     "lint": "tsc && npx eslint . --ext .ts",
-    "watch": "npx webpack --config webpack.config.js --watch"
+    "watch": "npx webpack --config webpack.config.js --watch",
+    "start": "npx http-server -p 8080 ."
   },
   "devDependencies": {
     "eslint": "^8.33.0",
