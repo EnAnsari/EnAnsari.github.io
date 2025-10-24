@@ -76,6 +76,41 @@ const iustNode = addItem({
     picture: "/static/images/iust.png",
 }, rootItem);
 
+const linkNode = addItem({
+    description: "How to reach me!",
+    picture: "/static/images/link.png",
+}, rootItem);
+
+const emailNode = addItem({
+    description: "<a href=\"mailto:rahmat.ansari.dev@gmail.com\">rahmat.ansari.dev@gmail.com</a>",
+    picture: "/static/images/email.png",
+}, linkNode);
+
+const linkedinNode = addItem({
+    description: "link: <a href=\"https://www.linkedin.com/in/en-r-ansari\">en-r-ansari</a>",
+    picture: "/static/images/linkedin.png",
+}, linkNode);
+
+const githubNode = addItem({
+    description: "link: <a href=\"https://github.com/EnAnsari\">EnAnsari</a>",
+    picture: "/static/images/github.png",
+}, linkNode);
+
+const telegramNode = addItem({
+    description: "my telegram channel: <a href=\"https://t.me/Iibx7\">Iibx7</a>",
+    picture: "/static/images/telegram.png",
+}, linkNode);
+
+const rahmatJsNode = addItem({
+    description: "organization specific to my server-side applications: <a href=\"https://github.com/rahmat-js\">rahmat-js</a>",
+    picture: "/static/images/rahmat-js.png",
+}, githubNode);
+
+const funCodingLab = addItem({
+    description: "organization dedicated to my interesting apps: <a href=\"https://github.com/funCodingLab\">funCodingLab</a>",
+    picture: "/static/images/funcodinglab.png",
+}, githubNode);
+
 const hsuLugNode = addItem({
     description: "I was one of the three leaders for the year 2023-2024, and with the help of other leaders and enthusiastic students, we held warm and intimate meetings about the latest technology and practical and experimental training in the professional workplace. This group was the most active Linux user group (LUG) in Sabzevar.",
     picture: "/static/images/lug.jpg",
@@ -86,3 +121,28 @@ const hsuSscNode = addItem({
     picture: "/static/images/ssc-hsu.jpg",
 }, hsuNode);
 
+const neshanNode = addItem({
+    description: "At Neshan I was a back-end mentee",
+    picture: "/static/images/neshan.png",
+}, experiencesNode);
+
+
+const partSoftwareGroupNode = addItem({
+    description: "I was a back-end intern in Part Software Group",
+    picture: "/static/images/part.png",
+}, experiencesNode);
+
+const rahmasirNode = addItem({
+    description: "In <a href=\"https://github.com/rahmasir\">this repository</a>, I have written all the code related to the Hammasir bootcamp in Neshan",
+    picture: "/static/images/rahmasir.png",
+}, neshanNode);
+
+const snappMapNode = addItem({
+    description: "In <a href=\"https://github.com/snapp-map\">this repository</a>, I have tried to create a simulation of the Snapp app and its affiliates with the help of my friend",
+    picture: "/static/images/snapp.png",
+}, neshanNode);
+
+const yaranNode = addItem({
+    description: "In <a href=\"https://github.com/tiffany-co\">this repository</a>, I wrote a remote application for a private employer using fastapi. I was a server-side programmer.",
+    picture: "/static/images/yaran.png",
+}, experiencesNode);
