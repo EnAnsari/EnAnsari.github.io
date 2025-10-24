@@ -40,12 +40,20 @@ function findItem(item: CVInfo): Tree {
 
 function addItem(info: CVInfo, parent: CVInfo): CVInfo {
     const parentTree = findItem(parent);
+    // MODIFIED: New logic for relSize
+    // This will shrink layer 2 (depth 1) and layer 3 (depth 2)
+    // but will keep layer 4 (depth 3) the same size as layer 3.
+    const newRelSize = (parentTree.item.depth >= 2) // Check if parent is layer 3 (depth 2) or deeper
+        ? parentTree.item.relSize // Don't shrink
+        : parentTree.item.relSize * 0.65; // Shrink for layers 2 and 3
+
     const item: CVItem = {
         description: info.description,
         picture: info.picture,
         depth: parentTree.item.depth + 1,
         relDistance: info.relDistance ?? parentTree.item.relDistance * 0.6,
-        relSize: info.relSize ?? parentTree.item.relSize * 0.65
+        // MODIFIED: Use the newRelSize logic
+        relSize: info.relSize ?? newRelSize
     };
     parentTree.children.push({item: item, children: []});
     return item;
@@ -75,6 +83,16 @@ const iustNode = addItem({
     description: "Master's degree student in AI",
     picture: "/static/images/iust.png",
 }, rootItem);
+
+const kaggleNode = addItem({
+    description: "link: <a href=\"https://www.kaggle.com/enansari\">enansari</a>",
+    picture: "/static/images/kaggle.png",
+}, iustNode);
+
+const rahmatMlNode = addItem({
+    description: "Organization related to AI projects: <a href=\"https://github.com/Rahmat-ML\">Rahmat-ML</a><br>My current personal page: <a href=\"https://rahmat-ml.github.io/\">rahmat-ml.github.io</a>",
+    picture: "/static/images/rahmat-ml.png",
+}, iustNode);
 
 const linkNode = addItem({
     description: "How to reach me!",
@@ -121,6 +139,41 @@ const hsuSscNode = addItem({
     picture: "/static/images/ssc-hsu.jpg",
 }, hsuNode);
 
+const hsuGithubNode = addItem({
+    description: "Some repositories that I have written specifically for Hakim Sabzevari University: <a href=\"https://github.com/hakimuni\">hakimuni</a>",
+    picture: "/static/images/github.png",
+}, hsuNode);
+
+const icpcNode = addItem({
+    description: "During my university years, I represented my university for two consecutive years, and with the help of my wonderful teammates, we were able to achieve 21st and 26th place in the Sharif University of Technology West Asia Regional Competition, <a href=\"https://icpc.global/ICPCID/KD9KWAJE12ZB\">my ICPC ID</a>",
+    picture: "/static/images/icpc.png",
+}, hsuNode);
+
+const codeforces = addItem({
+    description: "handles: <a href=\"https://codeforces.com/profile/enansari\">enansari</a> and <a href=\"https://codeforces.com/profile/pypi0\">pypi0</a>",
+    picture: "/static/images/codeforces.png",
+}, icpcNode);
+
+const ctrlAltDefeatNode = addItem({
+    description: "GitHub organization specific to this team: <a href=\"https://github.com/ctrl-alt-Defeat-icpc\">ctrl-alt-Defeat-icpc</a><br>Together, we succeeded in achieving the 26th ICPC2024 rank in West Asia.<br>webpage: <a href=\"https://ctrl-alt-defeat-icpc.github.io/\">ctrl-alt-defeat-icpc.github.io</a>",
+    picture: "/static/images/ctrl-alt-defeat.jpg",
+}, icpcNode);
+
+const nutellaNode = addItem({
+    description: "GitHub organization specific to this team: <a href=\"https://github.com/Nutella-ICPC\">Nutella-ICPC</a><br>Together, we succeeded in achieving 21st place in ICPC2023 West Asia.",
+    picture: "/static/images/nutella.jpg",
+}, icpcNode);
+
+const onlyfansNode = addItem({
+    description: "GitHub organization specific to this team: <a href=\"https://github.com/onlyfans-icpc\">onlyfans-icpc</a><br>Together, Together, we managed to advance to the Rayan World Finals as the top team in the eastern part of the country. We also managed to qualify for the national finals in the Dotin relief programming competition.",
+    picture: "/static/images/github.png",
+}, icpcNode);
+
+const rahmatCpNode = addItem({
+    description: "GitHub organization dedicated to my codes and programs related to competitive programming: <a href=\"https://github.com/Rahmat-CP\">Rahmat-CP</a>",
+    picture: "/static/images/rahmat-cp.png",
+}, icpcNode);
+
 const neshanNode = addItem({
     description: "At Neshan I was a back-end mentee",
     picture: "/static/images/neshan.png",
@@ -144,5 +197,5 @@ const snappMapNode = addItem({
 
 const yaranNode = addItem({
     description: "In <a href=\"https://github.com/tiffany-co\">this repository</a>, I wrote a remote application for a private employer using fastapi. I was a server-side programmer.",
-    picture: "/static/images/yaran.png",
+    picture: "/static/images/yaran.jpg",
 }, experiencesNode);

@@ -49,7 +49,8 @@ export class GraphVisualizer {
     // Helper function to calculate config
     private calculateConfig(sizeFactor: number) {
         return {
-            linkDistanceUnit: 300 * sizeFactor,
+            // UPDATED: Reduced from 300 to 200 to make edges shorter
+            linkDistanceUnit: 200 * sizeFactor,
             circleRadiusUnit: 80 * sizeFactor,
             chargeStrength: -60 * sizeFactor
         };
