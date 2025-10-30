@@ -65,7 +65,7 @@ export function getTree() {
 
 
 const cvNode = addItem({
-    description: "You can download a more formal resume <a href=\"https://rahmat-ml.github.io/files/rahmat-ansari-cv.pdf\">here</a>",
+    description: "You can download a more formal resume <a href=\"https://rallm.github.io/files/rahmat-ansari-cv.pdf\">here</a>",
     picture: "/static/images/cv.png",
 }, rootItem);
 
@@ -90,8 +90,8 @@ const kaggleNode = addItem({
 }, iustNode);
 
 const rahmatMlNode = addItem({
-    description: "Organization related to AI projects: <a href=\"https://github.com/Rahmat-ML\">Rahmat-ML</a><br>My current personal page: <a href=\"https://rahmat-ml.github.io/\">rahmat-ml.github.io</a>",
-    picture: "/static/images/rahmat-ml.png",
+    description: "Organization related to AI projects: <a href=\"https://github.com/rallm\">rallm</a><br>My current personal page: <a href=\"https://rallm.github.io/\">rallm.github.io</a>",
+    picture: "/static/images/rallm.png",
 }, iustNode);
 
 const linkNode = addItem({
